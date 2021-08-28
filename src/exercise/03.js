@@ -15,62 +15,48 @@ const Menu = React.memo(function Menu({
 }) {
   return (
     <ul {...getMenuProps()}>
-      {items.map((item, index) => (
-        <ListItem
-          key={item.id}
-          getItemProps={getItemProps}
-          item={item}
-          index={index}
-          selectedItem={selectedItem}
-          highlightedIndex={highlightedIndex}
-        >
-          {item.name}
-        </ListItem>
-      ))}
+      {items.map((item, index) => {
+        const isSelected = selectedItem?.id === item.id
+        const isHighlighted = highlightedIndex === index
+        return (
+          <ListItem
+            key={item.id}
+            getItemProps={getItemProps}
+            item={item}
+            index={index}
+            isSelected={isSelected}
+            isHighlighted={isHighlighted}
+          >
+            {item.name}
+          </ListItem>
+        )
+      })}
     </ul>
   )
 })
 
-const ListItem = React.memo(
-  function ListItem({
-    getItemProps,
-    item,
-    index,
-    selectedItem,
-    highlightedIndex,
-    ...props
-  }) {
-    const isSelected = selectedItem?.id === item.id
-    const isHighlighted = highlightedIndex === index
-    return (
-      <li
-        {...getItemProps({
-          index,
-          item,
-          style: {
-            fontWeight: isSelected ? 'bold' : 'normal',
-            backgroundColor: isHighlighted ? 'lightgray' : 'inherit',
-          },
-          ...props,
-        })}
-      />
-    )
-  },
-  (prevProps, nextProps) => {
-    if (prevProps.getItemProps !== nextProps.getItemProps) return false
-    if (prevProps.item !== nextProps.item) return false
-    if (prevProps.index !== nextProps.index) return false
-    if (prevProps.selectedItem !== nextProps.selectedItem) return false
-
-    if (prevProps.highlightedIndex !== nextProps.highlightedIndex) {
-      const wasHighlighted = prevProps.highlightedIndex === prevProps.index
-      const isHighlighted = nextProps.highlightedIndex === nextProps.index
-      return wasHighlighted === isHighlighted
-    }
-
-    return true
-  },
-)
+const ListItem = React.memo(function ListItem({
+  getItemProps,
+  item,
+  index,
+  isSelected,
+  isHighlighted,
+  ...props
+}) {
+  return (
+    <li
+      {...getItemProps({
+        index,
+        item,
+        style: {
+          fontWeight: isSelected ? 'bold' : 'normal',
+          backgroundColor: isHighlighted ? 'lightgray' : 'inherit',
+        },
+        ...props,
+      })}
+    />
+  )
+})
 
 function App() {
   const forceRerender = useForceRerender()
