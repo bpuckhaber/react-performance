@@ -12,6 +12,7 @@ import {
 
 const AppStateContext = React.createContext()
 const AppDispatchContext = React.createContext()
+const DogContext = React.createContext()
 
 const initialGrid = Array.from({length: 100}, () =>
   Array.from({length: 100}, () => Math.random() * 100),
@@ -33,8 +34,6 @@ function appReducer(state, action) {
 
 function AppProvider({children}) {
   const [state, dispatch] = React.useReducer(appReducer, {
-    // 💣 remove the dogName state because we're no longer managing that
-    dogName: '',
     grid: initialGrid,
   })
   return (
@@ -44,6 +43,25 @@ function AppProvider({children}) {
       </AppDispatchContext.Provider>
     </AppStateContext.Provider>
   )
+}
+
+function dogReducer(state, action) {
+  switch (action.type) {
+    case 'UPDATE_DOG': {
+      return {...state, ...action.value}
+    }
+    default: {
+      throw new Error(`Unhandled action type: ${action.type}`)
+    }
+  }
+}
+
+function DogProvider({children}) {
+  const [state, dispatch] = React.useReducer(dogReducer, {
+    dogName: '',
+  })
+  const value = [state, dispatch]
+  return <DogContext.Provider value={value}>{children}</DogContext.Provider>
 }
 
 function useAppState() {
@@ -58,6 +76,14 @@ function useAppDispatch() {
   const context = React.useContext(AppDispatchContext)
   if (!context) {
     throw new Error('useAppDispatch must be used within the AppProvider')
+  }
+  return context
+}
+
+function useDogState() {
+  const context = React.useContext(DogContext)
+  if (!context) {
+    throw new Error('useDogState must be used within the DogProvider')
   }
   return context
 }
@@ -101,11 +127,11 @@ function Cell({row, column}) {
 Cell = React.memo(Cell)
 
 function DogNameInput() {
-  const [dogName, setDogName] = React.useState('')
+  const [{dogName}, dispatch] = useDogState()
 
   function handleChange(event) {
-    const newDogName = event.target.value
-    setDogName(newDogName)
+    const value = {dogName: event.target.value}
+    dispatch({type: 'UPDATE_DOG', value})
   }
 
   return (
@@ -131,10 +157,12 @@ function App() {
     <div className="grid-app">
       <button onClick={forceRerender}>force rerender</button>
       <AppProvider>
-        <div>
-          <DogNameInput />
-          <Grid />
-        </div>
+        <DogProvider>
+          <div>
+            <DogNameInput />
+            <Grid />
+          </div>
+        </DogProvider>
       </AppProvider>
     </div>
   )
