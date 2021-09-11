@@ -106,14 +106,21 @@ function Grid() {
 }
 Grid = React.memo(Grid)
 
-function Cell({row, column}) {
-  const state = useAppState()
-  const cell = state.grid[row][column]
-  return <CellImp cell={cell} row={row} column={column} />
-}
-Cell = React.memo(Cell)
+function withStateSlice(WrappedComponent, getSlice) {
+  const MemoWrappedComponent = React.memo(WrappedComponent)
+  function Wrapper(props) {
+    const state = useAppState()
+    const slice = getSlice(state, props)
+    return <MemoWrappedComponent {...props} {...slice} />
+  }
+  Wrapper.displayName = `withStateSlice(${
+    WrappedComponent.displayName || WrappedComponent.name
+  })`
 
-function CellImp({cell, row, column}) {
+  return React.memo(Wrapper)
+}
+
+function Cell({cell, row, column}) {
   const dispatch = useAppDispatch()
   const handleClick = () => dispatch({type: 'UPDATE_GRID_CELL', row, column})
   return (
@@ -129,7 +136,9 @@ function CellImp({cell, row, column}) {
     </button>
   )
 }
-CellImp = React.memo(CellImp)
+Cell = withStateSlice(Cell, (state, props) => ({
+  cell: state.grid[props.row][props.column],
+}))
 
 function DogNameInput() {
   const [{dogName}, dispatch] = useDogState()
